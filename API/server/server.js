@@ -58,7 +58,15 @@ function startWebSocketServer(httpsServer) {
       ws.on('message', (message) => {
         // Broadcast any received message to all clients
         console.log(`received: ${message}`);
-        wss.broadcast(message);
+        const signal = JSON.parse(message);
+        
+        // Check if the message contains an SDP offer
+        if (signal.sdp) {
+          // Handle the SDP offer and start sending random numbers
+          handleSdpOffer(signal.sdp, ws);
+        } else {
+          wss.broadcast(message);
+        }
       });
     });
   
@@ -70,6 +78,20 @@ function startWebSocketServer(httpsServer) {
       });
     };
   }
+
+// New function to handle SDP offers and send random numbers
+function handleSdpOffer(sdp, ws) {
+    console.log('SDP offer received:', sdp);
+    
+    // Start sending random numbers over the WebSocket connection
+    const randomNumberStream = setInterval(() => {
+        const randomNumber = Math.random();
+        ws.send(JSON.stringify({ randomNumber })); // Send random number to the client
+    }, 1000); // Send a random number every second
+
+    // Clear the interval when the WebSocket connection is closed
+    ws.on('close', () => clearInterval(randomNumberStream));
+}
 
 function printHelp() {
     console.log(`Server running. Visit https://localhost:${HTTPS_PORT} in Firefox/Chrome/Safari.\n`);
