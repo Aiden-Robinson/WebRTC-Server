@@ -3,6 +3,7 @@ const fs = require('fs');
 const https = require('https');
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
+const { RTCPeerConnection, RTCSessionDescription } = require('wrtc');
 
 let peerConnection;
 
@@ -10,38 +11,33 @@ function main() {
     const httpsServer = startHttpsServer(serverConfig);
     startWebSocketServer(httpsServer);
     printHelp();
-  }
+}
 
 // Yes, TLS is required for WebRTC
 const serverConfig = { //Certificates
     key: fs.readFileSync('key.pem'),
     cert: fs.readFileSync('cert.pem'),
-  };
+};
 
-
-
-  function startHttpsServer(serverConfig) {
+function startHttpsServer(serverConfig) {
     // Handle incoming requests from the client
     const handleRequest = (request, response) => { //handling request from client
-      console.log(`request received: ${request.url}`);
-  
-      // This server only serves two files: The HTML page and the client JS file
-      if(request.url === '/') {
-        response.writeHead(200, {'Content-Type': 'text/html'});
-        response.end(fs.readFileSync('client/index.html'));
-      } else if(request.url === '/webrtc.js') {
-        response.writeHead(200, {'Content-Type': 'application/javascript'});
-        response.end(fs.readFileSync('client/webrtc.js'));
-      }
+        console.log(`request received: ${request.url}`);
+
+        // This server only serves two files: The HTML page and the client JS file
+        if (request.url === '/') {
+            response.writeHead(200, { 'Content-Type': 'text/html' });
+            response.end(fs.readFileSync('client/index.html'));
+        } else if (request.url === '/webrtc.js') {
+            response.writeHead(200, { 'Content-Type': 'application/javascript' });
+            response.end(fs.readFileSync('client/webrtc.js'));
+        }
     };
-  
+
     const httpsServer = https.createServer(serverConfig, handleRequest);
     httpsServer.listen(HTTPS_PORT, '0.0.0.0');
     return httpsServer;
-  }
-
-
-
+}
 
 // let createOffer = async () => {
 //     peerCOnnection= new RTCPeerConnection(servers) //specify which STUn servers to use in connection
@@ -63,7 +59,7 @@ function startWebSocketServer(httpsServer) {
         // Check if the message contains an SDP offer
         if (signal.sdp) {
           // Handle the SDP offer and start sending random numbers
-          handleSdpOffer(signal.sdp, ws);
+          handleSdpOffer(signal.sdp, ws, signal);
         } else {
           wss.broadcast(message);
         }
@@ -80,9 +76,30 @@ function startWebSocketServer(httpsServer) {
   }
 
 // New function to handle SDP offers and send random numbers
-function handleSdpOffer(sdp, ws) {
+function handleSdpOffer(sdp, ws, signal) {
     console.log('SDP offer received:', sdp);
     
+    // Create a new RTCPeerConnection for the server
+    const peerConnection = new RTCPeerConnection();
+
+    // Set the remote description using the received SDP offer
+    peerConnection.setRemoteDescription(new RTCSessionDescription(sdp))
+        .then(() => {
+            // Create an SDP answer
+            return peerConnection.createAnswer();
+        })
+        .then((answer) => {
+            // Set the local description with the created answer
+            return peerConnection.setLocalDescription(answer);
+        })
+        .then(() => {
+            // Send the SDP answer back to the client
+            ws.send(JSON.stringify({ sdp: peerConnection.localDescription, uuid: signal.uuid }));
+        })
+        .catch(error => {
+            console.error('Error handling SDP offer:', error);
+        });
+
     // Start sending random numbers over the WebSocket connection
     const randomNumberStream = setInterval(() => {
         const randomNumber = Math.random();

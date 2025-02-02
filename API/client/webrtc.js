@@ -15,7 +15,13 @@ const peerConnectionConfig = { //STUN servers from Google
   
     serverConnection = new WebSocket(`wss://${window.location.hostname}:8000`);
     serverConnection.onmessage = gotMessageFromServer;
+    serverConnection.onopen = () => {
+        console.log('WebSocket connection established'); // Log when the connection is opened
+    };
   
+    serverConnection.onerror = (error) => {
+        console.error('WebSocket error:', error); // Log WebSocket errors
+    };
   }
 
   function start(isCaller) { //responsible for initializing a webRTC connection
@@ -35,29 +41,35 @@ const peerConnectionConfig = { //STUN servers from Google
     }
   }
 
-  function gotMessageFromServer(message) { //handles incoming messages from a websocket server
-    if(!peerConnection) start(false);
+  function gotMessageFromServer(message) {
+    console.log('Message received from server:', message.data); // Log the entire message
+    if (!peerConnection) start(false);
   
-    const signal = JSON.parse(message.data); //signal stores incoming messages from the server
+    const signal = JSON.parse(message.data);
   
-    // Ignore messages from ourself
-    if(signal.uuid == uuid) return;
+    // Ignore messages from ourselves
+    if (signal.uuid == uuid) return;
   
-    if(signal.sdp) {
-      peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(() => {
-        // Only create answers in response to offers
-        if(signal.sdp.type !== 'offer') return;
+    if (signal.sdp) {
+        console.log('SDP answer received:', signal.sdp); // Log the received SDP answer
+        peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(() => {
+            // Only create answers in response to offers
+            if (signal.sdp.type !== 'offer') return;
   
-        peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
-      }).catch(errorHandler);
-    } else if(signal.ice) {
-      peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
+            peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
+        }).catch(errorHandler);
+    } else if (signal.ice) {
+        peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
+    } else if (signal.randomNumber !== undefined) {
+        // Update the random number display
+        document.getElementById('random-number').innerText = `Random Number: ${signal.randomNumber}`;
     }
   }
 
   function gotIceCandidate(event) { //verifies and sends ICE candidates to the singalling server 
-    if(event.candidate != null) {
-      serverConnection.send(JSON.stringify({'ice': event.candidate, 'uuid': uuid}));
+    if (event.candidate) {
+      console.log('Sending ICE candidate:', event.candidate); // Log the ICE candidate
+      serverConnection.send(JSON.stringify({ ice: event.candidate, uuid: uuid }));
     }
   }
 
