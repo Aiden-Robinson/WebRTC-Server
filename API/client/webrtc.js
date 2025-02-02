@@ -42,14 +42,14 @@ const peerConnectionConfig = { //STUN servers from Google
   }
 
   function gotMessageFromServer(message) {
-    console.log('Message received from server:', message.data); // Log the entire message
+    console.log('Message received from server:', message.data);
     if (!peerConnection) start(false);
-  
+
     const signal = JSON.parse(message.data);
-  
+
     // Ignore messages from ourselves
     if (signal.uuid == uuid) return;
-  
+
     if (signal.sdp) {
         console.log('SDP answer received:', signal.sdp); // Log the received SDP answer
         peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(() => {
@@ -63,6 +63,18 @@ const peerConnectionConfig = { //STUN servers from Google
     } else if (signal.randomNumber !== undefined) {
         // Update the random number display
         document.getElementById('random-number').innerText = `Random Number: ${signal.randomNumber}`;
+    } else if (signal.type === 'video') {
+        // Handle incoming video frame
+        const frameBuffer = new Uint8Array(Object.values(signal.data)); // Convert to Uint8Array
+        const blob = new Blob([frameBuffer], { type: 'image/png' }); // Create a Blob from the frame buffer
+        const img = new Image();
+        img.src = URL.createObjectURL(blob); // Create a URL for the Blob
+        img.onload = () => {
+            const canvas = document.getElementById('video-canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0); // Draw the image on the canvas
+            URL.revokeObjectURL(img.src); // Clean up the URL
+        };
     }
   }
 

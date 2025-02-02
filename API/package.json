@@ -11,6 +11,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "canvas": "^3.1.0",
     "webtransport": "^1.0.10",
     "wrtc": "^0.4.7",
     "ws": "^8.18.0"

@@ -4,6 +4,7 @@ const https = require('https');
 const WebSocket = require('ws');
 const WebSocketServer = WebSocket.Server;
 const { RTCPeerConnection, RTCSessionDescription } = require('wrtc');
+const { Worker } = require('worker_threads');
 
 let peerConnection;
 
@@ -47,33 +48,48 @@ function startHttpsServer(serverConfig) {
 // }
 
 function startWebSocketServer(httpsServer) {
-    // Create a server for handling websocket calls
-    const wss = new WebSocketServer({server: httpsServer});
-  
-    wss.on('connection', (ws) => {
-      ws.on('message', (message) => {
-        // Broadcast any received message to all clients
-        console.log(`received: ${message}`);
-        const signal = JSON.parse(message);
-        
-        // Check if the message contains an SDP offer
-        if (signal.sdp) {
-          // Handle the SDP offer and start sending random numbers
-          handleSdpOffer(signal.sdp, ws, signal);
-        } else {
-          wss.broadcast(message);
-        }
-      });
-    });
-  
-    wss.broadcast = function(data) {
-      this.clients.forEach((client) => {
-        if(client.readyState === WebSocket.OPEN) {
-          client.send(data, {binary: false});
-        }
-      });
+    const wss = new WebSocketServer({ server: httpsServer });
+    let peerConnection;
+
+    // Broadcast function to send messages to all connected clients
+    wss.broadcast = function broadcast(data) {
+        wss.clients.forEach(function each(client) {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(data);
+            }
+        });
     };
-  }
+
+    // Start the ball worker with the correct path
+    const ballWorker = new Worker('./server/ballWorker.js');
+
+    ballWorker.on('message', (frameBuffer) => {
+        if (peerConnection) {
+            // Send the frame buffer over WebRTC
+            // Assuming you have a method to send video frames
+            sendVideoFrame(frameBuffer);
+        }
+    });
+
+    wss.on('connection', (ws) => {
+        ws.on('message', (message) => {
+            const signal = JSON.parse(message);
+            if (signal.sdp) {
+                handleSdpOffer(signal.sdp, ws, signal);
+                peerConnection = new RTCPeerConnection();
+            } else {
+                wss.broadcast(message);
+            }
+        });
+    });
+
+    function sendVideoFrame(frameBuffer) {
+        // Convert frameBuffer to a format suitable for WebRTC
+        // This is a placeholder; you will need to implement encoding
+        const videoFrame = { type: 'video', data: frameBuffer };
+        wss.broadcast(JSON.stringify(videoFrame));
+    }
+}
 
 // New function to handle SDP offers and send random numbers
 function handleSdpOffer(sdp, ws, signal) {
