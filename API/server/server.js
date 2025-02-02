@@ -89,6 +89,9 @@ function startWebSocketServer(httpsServer) {
                 // Calculate the distance (error) between the guess and actual coordinates
                 const error = Math.sqrt(Math.pow(guessX - actualX, 2) + Math.pow(guessY - actualY, 2));
                 console.log(`Received guess - X: ${guessX}, Y: ${guessY}. Error: ${error.toFixed(2)}`); // Log the received guess and error
+                
+                // Send the error back to the client
+                ws.send(JSON.stringify({ type: 'error', error: error.toFixed(2) }));
             } else {
                 wss.broadcast(message);
             }

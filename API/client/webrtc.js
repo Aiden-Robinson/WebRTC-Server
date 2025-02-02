@@ -73,6 +73,10 @@ const peerConnectionConfig = { //STUN servers from Google
             ctx.drawImage(img, 0, 0); // Draw the image on the canvas
             URL.revokeObjectURL(img.src); // Clean up the URL
         };
+    } else if (signal.type === 'error') {
+        // Display the error on the frontend
+        const connectionStatus = document.getElementById('connection-status');
+        connectionStatus.innerText = `Error: ${signal.error} units away from the actual position.`;
     }
   }
 
