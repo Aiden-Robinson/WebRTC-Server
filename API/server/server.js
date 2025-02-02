@@ -77,6 +77,8 @@ function startWebSocketServer(httpsServer) {
             if (signal.sdp) {
                 handleSdpOffer(signal.sdp, ws, signal);
                 peerConnection = new RTCPeerConnection();
+            } else if (signal.type === 'guess') {
+                console.log(`Received guess - X: ${signal.x}, Y: ${signal.y}`); // Log the received guess
             } else {
                 wss.broadcast(message);
             }

@@ -111,3 +111,9 @@ function createUUID() {
 
   return `${s4() + s4()}-${s4()}-${s4()}-${s4()}-${s4() + s4() + s4()}`;
 }
+
+function submitGuess() {
+    const guessX = document.getElementById('guess-x').value;
+    const guessY = document.getElementById('guess-y').value;
+    serverConnection.send(JSON.stringify({ type: 'guess', x: guessX, y: guessY }));
+}

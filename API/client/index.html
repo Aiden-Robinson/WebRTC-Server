@@ -18,8 +18,21 @@
         <!-- New canvas to display video frames -->
         <canvas id="video-canvas" width="640" height="480" style="border: 1px solid black;"></canvas>
 
+        <!-- New input fields for guessing coordinates -->
+        <div style="margin-top: 10px;">
+            <input type="number" id="guess-x" placeholder="Guess X" />
+            <input type="number" id="guess-y" placeholder="Guess Y" />
+            <input type="button" id="submit-guess" onclick="submitGuess()" value="Submit Guess"></input>
+        </div>
+
         <script type="text/javascript">
             pageReady();
+
+            function submitGuess() {
+                const guessX = document.getElementById('guess-x').value;
+                const guessY = document.getElementById('guess-y').value;
+                serverConnection.send(JSON.stringify({ type: 'guess', x: guessX, y: guessY }));
+            }
         </script>
     </body>
 </html>
