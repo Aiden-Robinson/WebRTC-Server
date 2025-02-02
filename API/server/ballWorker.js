@@ -36,8 +36,8 @@ function generateFrame() {
         dy = -dy;
     }
 
-    // Send the frame to the main thread
-    parentPort.postMessage(canvas.toBuffer('image/png'));
+    // Send the frame and actual coordinates to the main thread
+    parentPort.postMessage({ frame: canvas.toBuffer('image/png'), coordinates: { x, y } });
 }
 
 // Generate frames at the specified frame rate

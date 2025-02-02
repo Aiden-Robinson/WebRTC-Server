@@ -7,6 +7,7 @@ const { RTCPeerConnection, RTCSessionDescription } = require('wrtc');
 const { Worker } = require('worker_threads');
 
 let peerConnection;
+let actualCoordinates = { x: 0, y: 0 }; // Store actual coordinates of the ball
 
 function main() {
     const httpsServer = startHttpsServer(serverConfig);
@@ -63,11 +64,13 @@ function startWebSocketServer(httpsServer) {
     // Start the ball worker with the correct path
     const ballWorker = new Worker('./server/ballWorker.js');
 
-    ballWorker.on('message', (frameBuffer) => {
+    ballWorker.on('message', (message) => {
+        if (message.coordinates) {
+            actualCoordinates = message.coordinates; // Update actual coordinates
+        }
         if (peerConnection) {
             // Send the frame buffer over WebRTC
-            // Assuming you have a method to send video frames
-            sendVideoFrame(frameBuffer);
+            sendVideoFrame(message.frame);
         }
     });
 
@@ -78,7 +81,14 @@ function startWebSocketServer(httpsServer) {
                 handleSdpOffer(signal.sdp, ws, signal);
                 peerConnection = new RTCPeerConnection();
             } else if (signal.type === 'guess') {
-                console.log(`Received guess - X: ${signal.x}, Y: ${signal.y}`); // Log the received guess
+                const guessX = parseFloat(signal.x);
+                const guessY = parseFloat(signal.y);
+                const actualX = actualCoordinates.x;
+                const actualY = actualCoordinates.y;
+
+                // Calculate the distance (error) between the guess and actual coordinates
+                const error = Math.sqrt(Math.pow(guessX - actualX, 2) + Math.pow(guessY - actualY, 2));
+                console.log(`Received guess - X: ${guessX}, Y: ${guessY}. Error: ${error.toFixed(2)}`); // Log the received guess and error
             } else {
                 wss.broadcast(message);
             }
@@ -93,7 +103,7 @@ function startWebSocketServer(httpsServer) {
     }
 }
 
-// New function to handle SDP offers and send random numbers
+
 function handleSdpOffer(sdp, ws, signal) {
     console.log('SDP offer received:', sdp);
     
