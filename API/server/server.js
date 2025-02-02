@@ -92,6 +92,13 @@ function startWebSocketServer(httpsServer) {
                 
                 // Send the error back to the client
                 ws.send(JSON.stringify({ type: 'error', error: error.toFixed(2) }));
+            } else if (signal.type === 'shutdown') {
+                console.log('Shutdown request received from client.');
+                if (peerConnection) {
+                    peerConnection.close(); // Close the WebRTC connection
+                    peerConnection = null; // Reset peerConnection
+                }
+                ws.send(JSON.stringify({ type: 'shutdown', message: 'WebRTC connection closed.' })); // Acknowledge shutdown
             } else {
                 wss.broadcast(message);
             }

@@ -25,6 +25,10 @@
             <input type="button" id="submit-guess" onclick="submitGuess()" value="Submit Guess"></input>
         </div>
 
+        <div style="margin-top: 10px;">
+            <input type="button" id="shutdown" onclick="shutdownConnection()" value="Shutdown WebRTC"></input>
+        </div>
+
         <script type="text/javascript">
             pageReady();
 
@@ -32,6 +36,11 @@
                 const guessX = document.getElementById('guess-x').value;
                 const guessY = document.getElementById('guess-y').value;
                 serverConnection.send(JSON.stringify({ type: 'guess', x: guessX, y: guessY }));
+            }
+
+            function shutdownConnection() {
+                serverConnection.send(JSON.stringify({ type: 'shutdown' })); // Send shutdown message to server
+                console.log('Shutdown request sent to server.');
             }
         </script>
     </body>
