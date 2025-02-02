@@ -115,15 +115,6 @@ function handleSdpOffer(sdp, ws, signal) {
         .catch(error => {
             console.error('Error handling SDP offer:', error);
         });
-
-    // Start sending random numbers over the WebSocket connection
-    const randomNumberStream = setInterval(() => {
-        const randomNumber = Math.random();
-        ws.send(JSON.stringify({ randomNumber })); // Send random number to the client
-    }, 1000); // Send a random number every second
-
-    // Clear the interval when the WebSocket connection is closed
-    ws.on('close', () => clearInterval(randomNumberStream));
 }
 
 function printHelp() {

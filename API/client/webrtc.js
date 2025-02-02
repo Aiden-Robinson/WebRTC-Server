@@ -60,9 +60,6 @@ const peerConnectionConfig = { //STUN servers from Google
         }).catch(errorHandler);
     } else if (signal.ice) {
         peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
-    } else if (signal.randomNumber !== undefined) {
-        // Update the random number display
-        document.getElementById('random-number').innerText = `Random Number: ${signal.randomNumber}`;
     } else if (signal.type === 'video') {
         // Handle incoming video frame
         const frameBuffer = new Uint8Array(Object.values(signal.data)); // Convert to Uint8Array
@@ -72,6 +69,7 @@ const peerConnectionConfig = { //STUN servers from Google
         img.onload = () => {
             const canvas = document.getElementById('video-canvas');
             const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas before drawing
             ctx.drawImage(img, 0, 0); // Draw the image on the canvas
             URL.revokeObjectURL(img.src); // Clean up the URL
         };
