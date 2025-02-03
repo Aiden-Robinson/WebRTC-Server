@@ -10,6 +10,8 @@ let dx = 2; // Change in x (speed)
 let dy = 2; // Change in y (speed)
 const frameRate = 30; // Configurable frame rate
 
+let animationInterval = null;
+
 function generateFrame() {
     const canvas = createCanvas(canvasWidth, canvasHeight);
     const ctx = canvas.getContext('2d');
@@ -40,7 +42,24 @@ function generateFrame() {
     parentPort.postMessage({ frame: canvas.toBuffer('image/png'), coordinates: { x, y } });
 }
 
-module.exports = { generateFrame };
 
-// Generate frames at the specified frame rate
-setInterval(generateFrame, 1000 / frameRate);
+//For testing purposes
+function startAnimation() {
+    if (!animationInterval) {
+        animationInterval = setInterval(generateFrame, 1000 / frameRate);
+    }
+}
+
+function stopAnimation() {
+    if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+    }
+}
+
+module.exports = { generateFrame, startAnimation, stopAnimation };
+
+// Only start the animation if we're not in a test environment
+if (process.env.NODE_ENV !== 'test') {
+    startAnimation();
+}

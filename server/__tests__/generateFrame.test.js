@@ -1,6 +1,6 @@
 const { parentPort } = require('worker_threads');
 const { createCanvas } = require('canvas');
-const { generateFrame } = require('../server/ballWorker'); // Adjust the path as necessary
+const { generateFrame, stopAnimation } = require('../ballWorker'); // Adjust the path as necessary
 
 jest.mock('worker_threads', () => ({
     parentPort: {
@@ -25,6 +25,11 @@ describe('generateFrame', () => {
     beforeEach(() => {
         // Reset mocks before each test
         parentPort.postMessage.mockClear();
+    });
+
+    afterAll(() => {
+        // Clean up any running intervals
+        stopAnimation();
     });
 
     test('should generate a frame and send it to the parent port', () => {
