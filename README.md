@@ -95,4 +95,3 @@ To stop and clean up the deployment:
    minikube stop
    ```
 
-## Project Structure
