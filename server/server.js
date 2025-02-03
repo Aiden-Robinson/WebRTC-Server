@@ -6,13 +6,18 @@ const WebSocketServer = WebSocket.Server;
 const { RTCPeerConnection, RTCSessionDescription } = require('wrtc');
 const { Worker } = require('worker_threads');
 
-let peerConnection;
+
 let actualCoordinates = { x: 0, y: 0 }; // Store actual coordinates of the ball
 
 function main() {
-    const httpsServer = startHttpsServer(serverConfig);
-    startWebSocketServer(httpsServer);
+    const { wss, shutdown } = startWebSocketServer(startHttpsServer(serverConfig));
     printHelp();
+
+    // Listen for shutdown signal (e.g., SIGINT)
+    process.on('SIGINT', () => {
+        shutdown();
+        process.exit(0);
+    });
 }
 
 // Yes, TLS is required for WebRTC
@@ -41,16 +46,11 @@ function startHttpsServer(serverConfig) {
     return httpsServer;
 }
 
-// let createOffer = async () => {
-//     peerCOnnection= new RTCPeerConnection(servers) //specify which STUn servers to use in connection
-
-//     let offer = await peerConnection.createOffer()
-    
-// }
 
 function startWebSocketServer(httpsServer) {
     const wss = new WebSocketServer({ server: httpsServer });
     let peerConnection;
+    let ballWorker; // Store the ball worker reference
 
     // Broadcast function to send messages to all connected clients
     wss.broadcast = function broadcast(data) {
@@ -62,7 +62,7 @@ function startWebSocketServer(httpsServer) {
     };
 
     // Start the ball worker with the correct path
-    const ballWorker = new Worker('./server/ballWorker.js');
+    ballWorker = new Worker('./server/ballWorker.js');
 
     ballWorker.on('message', (message) => {
         if (message.coordinates) {
@@ -111,6 +111,26 @@ function startWebSocketServer(httpsServer) {
         const videoFrame = { type: 'video', data: frameBuffer };
         wss.broadcast(JSON.stringify(videoFrame));
     }
+
+    // Add a shutdown function to clean up resources
+    function shutdown() {
+        console.log('Shutting down server...');
+        if (peerConnection) {
+            peerConnection.close(); // Close the WebRTC connection
+            peerConnection = null; // Reset peerConnection
+        }
+        if (ballWorker) {
+            ballWorker.terminate(); // Terminate the ball worker
+            ballWorker = null; // Reset ballWorker
+        }
+        wss.clients.forEach(client => {
+            client.close(); // Close all WebSocket connections
+        });
+        wss.close(); // Close the WebSocket server
+    }
+
+    // Expose the shutdown function for external calls
+    return { wss, shutdown };
 }
 
 

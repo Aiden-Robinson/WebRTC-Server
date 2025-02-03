@@ -40,5 +40,7 @@ function generateFrame() {
     parentPort.postMessage({ frame: canvas.toBuffer('image/png'), coordinates: { x, y } });
 }
 
+module.exports = { generateFrame };
+
 // Generate frames at the specified frame rate
 setInterval(generateFrame, 1000 / frameRate);
