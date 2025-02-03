@@ -1,0 +1,147 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ssl-certificates
+data:
+  cert.pem: |
+    -----BEGIN CERTIFICATE-----
+    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
+    -----END CERTIFICATE-----
+  key.pem: |
+    -----BEGIN PRIVATE KEY-----
+    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
+    ZEbffYj4hKrpVVuPFYwKzuLcXP1vTFQ=
+    -----END PRIVATE KEY-----
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: webrtc-server
+  labels:
+    app: webrtc-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webrtc-server
+  template:
+    metadata:
+      labels:
+        app: webrtc-server
+    spec:
+      containers:
+        - name: webrtc-server
+          image: webrtc-server:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8000
+          volumeMounts:
+            - name: ssl-certs
+              mountPath: /usr/src/app/cert.pem
+              subPath: cert.pem
+            - name: ssl-certs
+              mountPath: /usr/src/app/key.pem
+              subPath: key.pem
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+      volumes:
+        - name: ssl-certs
+          configMap:
+            name: ssl-certificates
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: webrtc-server-service
+spec:
+  type: NodePort
+  selector:
+    app: webrtc-server
+  ports:
+    - port: 8000
+      targetPort: 8000
+      nodePort: 30000
+      protocol: TCP
+      name: https
