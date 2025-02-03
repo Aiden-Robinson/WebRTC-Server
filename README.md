@@ -27,6 +27,8 @@ This project demonstrates real-time video streaming and interactive coordinate g
 
 The project serves as a practical example of WebRTC streaming capabilities while incorporating interactive elements and real-time data exchange.
 
+![Screenshot](webRTC.png)
+
 ## Prerequisites
 
 Before you begin, ensure you have the following installed:
@@ -94,4 +96,3 @@ To stop and clean up the deployment:
    ```powershell
    minikube stop
    ```
-
